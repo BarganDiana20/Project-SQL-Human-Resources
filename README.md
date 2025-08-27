@@ -2,12 +2,12 @@
 
 This database was designed to manage employee information, payroll, attendance, leaves, allowances, deductions, and contributions. It supports HR operations by storing detailed employee records, including employment contracts, timesheets, leave history, and compensation data. The database enables the generation of various reports and analyses to facilitate payroll processing, leave tracking, and contribution monitoring.
 
-This database contains 13 tables
-├── employees: employee details such as employee code, name, surname, and contact information.
-├── positions: the positions held by the employees
-├── departments: information about departments
-├── contracts: details about employee contracts such as hire date, end date, salary
-├── leaves: contains types of leave available
+This database contains 13 tables:  
+├── employees: employee details such as employee code, name, surname, and contact information.  
+├── positions: the positions held by the employees.  
+├── departments: information about departments.  
+├── contracts: details about employee contracts such as hire date, end date, salary.  
+├── leaves: contains types of leave available.  
 ├── leave_details: contains records of employees' leave periods, including start date, end date, and request date.
 ├── contributions: contains types of legal contributions (CAS, CASS, IV, CAM, etc.).
 ├── contribution_details: stores the calculated contribution amounts for each employee, with record dates for monthly tracking.
