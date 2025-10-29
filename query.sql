@@ -262,3 +262,95 @@ LEFT JOIN (
 ) cd ON e.employee_code = cd.employee_code
 WHERE ((c.salary + COALESCE(a.total_allowances, 0)) - COALESCE(cd.total_contributions, 0)) > 4000
 ORDER BY net_salary DESC;
+
+--12. Estimate the total salary cost per department if a 5% increase is applied to each salary.
+--solution 1
+SELECT d.department_name,
+       SUM(c.salary) AS total_current_salary,
+	   SUM(ROUND(c.salary * 1.05, 2)) AS estimated_nextmonth_salary
+FROM employees e
+INNER JOIN positions p 
+    ON e.employee_code = p.employee_code
+INNER JOIN departments d 
+    ON p.department_code = d.department_code
+INNER JOIN contracts c 
+    ON e.employee_code = c.employee_code
+GROUP BY d.department_name;
+
+--solution 2 
+SELECT d.department_name,
+       SUM(e.salary) AS total_current_salary,
+	   SUM(ROUND(e.salary * 1.05, 2)) AS estimated_nextmonth_salary
+FROM (
+    SELECT e.employee_code, MAX(c.salary) AS salary
+    FROM employees e
+    JOIN contracts c ON e.employee_code = c.employee_code
+    GROUP BY e.employee_code
+) e
+JOIN positions p ON e.employee_code = p.employee_code
+JOIN departments d ON p.department_code = d.department_code
+GROUP BY d.department_name;
+
+--13. Estimated the total paid leave cost per department by calculating total leave days and 
+-- average daily salary, highlighting the overall impact of leave on departmental payroll costs.
+
+SELECT d.department_name,
+       SUM(ld.end_date - ld.start_date + 1) AS total_leave_days, --per departament
+       ROUND(AVG(c.salary / 21), 2) AS avg_daily_salary, --estimated average daily wage for employees
+       ROUND(SUM(c.salary / 21 * (ld.end_date - ld.start_date + 1)), 2) AS estimated_leave_cost
+FROM leave_details ld
+INNER JOIN employees e
+    ON ld.employee_code = e.employee_code
+INNER JOIN positions p
+    ON e.employee_code = p.employee_code
+INNER JOIN departments d
+    ON p.department_code = d.department_code
+INNER JOIN contracts c
+    ON e.employee_code = c.employee_code
+GROUP BY d.department_name;
+
+
+--14. Post-calculation of average cost per department
+
+SELECT d.department_name,
+       ROUND(AVG(c.salary), 2) AS avg_salary,
+       ROUND(AVG(ad.value), 2) AS avg_allowances, -- average allowances or bonuses
+       ROUND(AVG(c.salary + COALESCE(ad.value,0)), 2) AS avg_total_cost  -- average total cost per employee, including salary and bonuses.
+FROM employees e
+INNER JOIN positions p 
+    ON e.employee_code = p.employee_code
+INNER JOIN departments d 
+    ON p.department_code = d.department_code
+INNER JOIN contracts c 
+    ON e.employee_code = c.employee_code
+LEFT JOIN allowance_details ad
+    ON e.employee_code = ad.employee_code
+GROUP BY d.department_name;
+
+--15. Calculate the average cost per employee per department, including salary, allowances, 
+-- contributions, and deductions, to support post-calculation and cost estimation.
+
+SELECT d.department_name,
+       ROUND(AVG(c.salary), 2) AS avg_salary,
+       ROUND(AVG(COALESCE(ad.value,0)), 2) AS avg_allowances,
+       ROUND(AVG(COALESCE(cd.value,0)), 2) AS avg_contributions,
+       ROUND(AVG(COALESCE(dd.value,0)), 2) AS avg_deductions,
+       ROUND(AVG(c.salary 
+                 + COALESCE(ad.value,0) 
+                 + COALESCE(cd.value,0) 
+                 - COALESCE(dd.value,0)), 2) AS avg_total_cost
+FROM employees e
+INNER JOIN positions p 
+    ON e.employee_code = p.employee_code
+INNER JOIN departments d 
+    ON p.department_code = d.department_code
+INNER JOIN contracts c 
+    ON e.employee_code = c.employee_code
+LEFT JOIN allowance_details ad
+    ON e.employee_code = ad.employee_code
+LEFT JOIN contribution_details cd
+    ON e.employee_code = cd.employee_code
+LEFT JOIN deduction_details dd
+    ON e.employee_code = dd.employee_code
+GROUP BY d.department_name;
+
